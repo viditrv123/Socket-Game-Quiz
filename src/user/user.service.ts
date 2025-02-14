@@ -44,4 +44,37 @@ export class UserService {
         }
         throw new UnauthorizedException('Wrong credentials');
     }
+
+    async verifyUserToken({ token }: { token: string }): Promise<any> {
+        try {
+            // Verify JWT token and extract user ID
+            const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string };
+            console.log(decoded);
+            if (!decoded || !decoded.id) {
+                return new UnauthorizedException('Invalid token');
+            }
+
+
+            // Fetch user from database
+            const user = await this.userModel.findOne({
+                _id: decoded.id
+            });
+
+            if (!user) {
+                return new NotFoundException('User does not exist');
+            }
+
+            // Return user data
+            return {
+                statusCode: 200,
+                message: 'User verified successfully',
+                user: {
+                    id: user.id,
+                    userName: user.userName,
+                },
+            };
+        } catch (err) {
+            throw new UnauthorizedException('Unauthorized user token');
+        }
+    }
 }

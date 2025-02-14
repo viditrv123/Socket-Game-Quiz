@@ -1,6 +1,7 @@
-import {Body, Controller,  Post} from '@nestjs/common';
+import {Body, Controller, Get, Post, UseGuards} from '@nestjs/common';
 import {UserService} from "./user.service";
 import createUserDto from "./dto";
+import {AppGaurd} from "../core/gaurds/app.gaurd";
 
 @Controller('user')
 export class UserController {
@@ -16,5 +17,11 @@ export class UserController {
     login(@Body() dto: createUserDto): object {
         const { userName, password } = dto;
         return this.userService.login({ userName, password });
+    }
+
+    @UseGuards(AppGaurd)
+    @Get('/check')
+    check(): string{
+        return "Correct"
     }
 }
