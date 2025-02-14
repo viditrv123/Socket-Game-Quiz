@@ -11,4 +11,10 @@ export class UserController {
         const { userName, password } = dto;
         return this.userService.createUser({ userName, password });
     }
+
+    @Post('/login')
+    login(@Body() dto: createUserDto): object {
+        const { userName, password } = dto;
+        return this.userService.login({ userName, password });
+    }
 }
