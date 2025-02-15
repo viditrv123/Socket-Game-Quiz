@@ -1,6 +1,6 @@
 import { Socket as _Socket } from 'socket.io';
 
-export type typeSocketUser = {
+export type SocketUser = {
   id: string;
   userName: string;
 };
