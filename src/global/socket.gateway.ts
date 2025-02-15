@@ -36,9 +36,9 @@ export class SocketGateway {
     );
     this.server.on('connection', (client: Socket) => {
       console.log(`Client connected: ${client.id}`);
-      client.on('disconnect',()=>{
+      client.on('disconnect', () => {
         console.log(`Client disconnected: ${client.id}`);
-      })
+      });
     });
   }
 
@@ -50,6 +50,7 @@ export class SocketGateway {
 
   @SubscribeMessage('FIND_GAME')
   async findGame(client: Socket) {
+    const questions = [1, 2, 3, 4];
     const user = await this.getCurrentUser(client);
     // Fetch the current queue from Redis
     const queue: string[] = (await this.cacheManager.get('queue')) || [];
@@ -90,5 +91,23 @@ export class SocketGateway {
 
     // Return the user info (as before)
     return user;
+  }
+
+  @SubscribeMessage('START_QUESTIONS')
+  async startQuestions(client: Socket, roomName: string) {
+    const questions = [1, 2, 3, 4];
+    let index = 0;
+    let timeOut;
+    timeOut = setInterval(() => {
+      if (index >= questions.length) {
+        clearInterval(timeOut);
+        console.log('All questions have been sent');
+      } else {
+        this.server
+          .to(roomName)
+          .emit('QUESTIONS', { question: questions[index] });
+        index += 1;
+      }
+    }, 10000);
   }
 }
