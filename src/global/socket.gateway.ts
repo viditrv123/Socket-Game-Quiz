@@ -82,6 +82,8 @@ export class SocketGateway {
 
           // You can send a message to both clients that they're now in the same game room
           this.server.to(roomName).emit('GAME_STARTED', { room: roomName });
+
+          this.startQuestions(roomName)
         }
       }
     }
@@ -93,8 +95,7 @@ export class SocketGateway {
     return user;
   }
 
-  @SubscribeMessage('START_QUESTIONS')
-  async startQuestions(client: Socket, roomName: string) {
+  async startQuestions( roomName: string) {
     const questions = [1, 2, 3, 4];
     let index = 0;
     let timeOut;
