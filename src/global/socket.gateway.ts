@@ -47,8 +47,46 @@ export class SocketGateway {
 
   @SubscribeMessage('FIND_GAME')
   async findGame(client: Socket) {
-    const queue = this.cacheManager.get('queue');
-    const user = (client.data.user as SocketUser) || {};
+    const user = await this.getCurrentUser(client);
+    // Fetch the current queue from Redis
+    const queue: string[] = (await this.cacheManager.get('queue')) || [];
+    console.log('queue', queue);
+    // If the queue doesn't exist, initialize it as an empty array
+    const clientId: string = user.id;
+    if (queue.length === 0) {
+      await this.cacheManager.set('queue', []);
+
+      // Add the client ID to the queue
+      queue.push(clientId); // Now adding client.id to the queue
+
+      // Save the updated queue back to Redis
+      await this.cacheManager.set('queue', queue);
+    } else {
+      const secondClientId = queue.unshift();
+      if (secondClientId) {
+        // Emit that the second client has been found (you can emit an event if you want)
+        const secondClient = this.server.sockets.sockets.get(secondClientId);
+        if (secondClient) {
+          // Both clients join the same room, using the room name as a unique identifier (like 'game-room')
+          const roomName = `game-room-${clientId}-${secondClientId}`;
+          client.join(roomName); // The current client joins the room
+          secondClient.join(roomName); // The second client joins the same room
+
+          console.log(
+            `Client ${clientId} and ${secondClientId} joined room ${roomName}`,
+          );
+
+          // You can send a message to both clients that they're now in the same game room
+          client.emit('GAME_STARTED', { room: roomName });
+          secondClient.emit('GAME_STARTED', { room: roomName });
+        }
+      }
+    }
+
+    // Log the updated queue
+    console.log(queue);
+
+    // Return the user info (as before)
     return user;
   }
 }
