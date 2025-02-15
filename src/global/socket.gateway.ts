@@ -6,6 +6,8 @@ import {
 import { Socket } from 'socket.io';
 import { SocketUser } from './types';
 import { SocketAuthMiddlewareService } from './middlewares/socket.middleware';
+import { Inject } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 
 @WebSocketGateway({
   path: '/socket.io',
@@ -17,6 +19,7 @@ import { SocketAuthMiddlewareService } from './middlewares/socket.middleware';
 export class SocketGateway {
   constructor(
     private readonly socketAuthMiddlewareService: SocketAuthMiddlewareService,
+    @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
   ) {}
 
   @WebSocketServer()
@@ -38,6 +41,13 @@ export class SocketGateway {
 
   @SubscribeMessage('GET_CURRENT_USER')
   async getCurrentUser(client: Socket) {
+    const user = (client.data.user as SocketUser) || {};
+    return user;
+  }
+
+  @SubscribeMessage('FIND_GAME')
+  async findGame(client: Socket) {
+    const queue = this.cacheManager.get('queue');
     const user = (client.data.user as SocketUser) || {};
     return user;
   }
