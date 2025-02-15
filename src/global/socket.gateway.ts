@@ -96,6 +96,7 @@ export class SocketGateway {
   }
 
   async startQuestions( roomName: string) {
+    console.log("eNTERed")
     const questions = [1, 2, 3, 4];
     let index = 0;
     let timeOut;
