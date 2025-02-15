@@ -36,6 +36,9 @@ export class SocketGateway {
     );
     this.server.on('connection', (client: Socket) => {
       console.log(`Client connected: ${client.id}`);
+      client.on('disconnect',()=>{
+        console.log(`Client disconnected: ${client.id}`);
+      })
     });
   }
 
@@ -52,7 +55,7 @@ export class SocketGateway {
     const queue: string[] = (await this.cacheManager.get('queue')) || [];
     console.log('queue', queue);
     // If the queue doesn't exist, initialize it as an empty array
-    const clientId: string = user.id;
+    const clientId: string = client.id;
     if (queue.length === 0) {
       await this.cacheManager.set('queue', []);
 
@@ -62,7 +65,7 @@ export class SocketGateway {
       // Save the updated queue back to Redis
       await this.cacheManager.set('queue', queue);
     } else {
-      const secondClientId = queue.unshift();
+      const secondClientId = queue.shift();
       if (secondClientId) {
         // Emit that the second client has been found (you can emit an event if you want)
         const secondClient = this.server.sockets.sockets.get(secondClientId);
@@ -77,8 +80,7 @@ export class SocketGateway {
           );
 
           // You can send a message to both clients that they're now in the same game room
-          client.emit('GAME_STARTED', { room: roomName });
-          secondClient.emit('GAME_STARTED', { room: roomName });
+          this.server.to(roomName).emit('GAME_STARTED', { room: roomName });
         }
       }
     }
