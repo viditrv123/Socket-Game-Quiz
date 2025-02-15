@@ -83,7 +83,7 @@ export class SocketGateway {
           // You can send a message to both clients that they're now in the same game room
           this.server.to(roomName).emit('GAME_STARTED', { room: roomName });
 
-          this.startQuestions(roomName)
+          this.startQuestions(roomName);
         }
       }
     }
@@ -95,13 +95,67 @@ export class SocketGateway {
     return user;
   }
 
-  async startQuestions( roomName: string) {
-    console.log("eNTERed")
-    const questions = [1, 2, 3, 4];
+  async startQuestions(roomName: string) {
+    console.log('eNTERed');
+    const questions = [
+      {
+        question: 'What is the square root of 144?',
+        options: ['10', '12', '14', '16'],
+        correct: '12',
+      },
+      {
+        question: 'What is 15% of 200?',
+        options: ['30', '40', '50', '60'],
+        correct: '30',
+      },
+      {
+        question: 'What is 25 times 16?',
+        options: ['400', '375', '500', '425'],
+        correct: '400',
+      },
+      {
+        question: 'What is the result of 80 divided by 4?',
+        options: ['16', '18', '20', '22'],
+        correct: '20',
+      },
+      {
+        question: 'If x = 3, what is the value of 4x + 5?',
+        options: ['17', '15', '13', '11'],
+        correct: '17',
+      },
+      {
+        question: 'What is the value of 9^2?',
+        options: ['81', '72', '90', '100'],
+        correct: '81',
+      },
+      {
+        question: 'What is the product of 7 and 13?',
+        options: ['84', '78', '91', '98'],
+        correct: '91',
+      },
+      {
+        question:
+          'If a train travels 60 miles in 1 hour, how far will it travel in 3.5 hours?',
+        options: ['210 miles', '200 miles', '220 miles', '240 miles'],
+        correct: '210 miles',
+      },
+      {
+        question:
+          'What is the area of a triangle with a base of 10 units and a height of 5 units?',
+        options: ['25', '30', '40', '50'],
+        correct: '25',
+      },
+      {
+        question: 'What is the sum of 132 and 768?',
+        options: ['900', '950', '900', '850'],
+        correct: '900',
+      },
+    ];
+
     let index = 0;
     let timeOut;
     timeOut = setInterval(() => {
-      console.log("TimeoutSTarted")
+      console.log('TimeoutSTarted');
       if (index >= questions.length) {
         clearInterval(timeOut);
         console.log('All questions have been sent');
