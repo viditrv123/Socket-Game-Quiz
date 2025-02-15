@@ -14,7 +14,7 @@ export class SocketAuthMiddlewareService {
       const user: any = await this.userService.verifyUserToken({ token });
       client.data.user = {
         id: user.user.id,
-        username: user.user.username,
+        userName: user.user.userName,
       };
       next();
     } catch (err) {
