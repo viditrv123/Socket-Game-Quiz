@@ -100,6 +100,7 @@ export class SocketGateway {
     let index = 0;
     let timeOut;
     timeOut = setInterval(() => {
+      console.log("TimeoutSTarted")
       if (index >= questions.length) {
         clearInterval(timeOut);
         console.log('All questions have been sent');
