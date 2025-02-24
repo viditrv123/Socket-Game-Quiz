@@ -17,11 +17,11 @@ import { Cache } from 'cache-manager';
   },
 })
 export class SocketGateway {
+  private timeOut;
+  private roomName;
   constructor(
     private readonly socketAuthMiddlewareService: SocketAuthMiddlewareService,
     @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
-    private timeOut,
-    private roomName,
   ) {}
 
   @WebSocketServer()
