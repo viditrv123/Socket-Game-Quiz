@@ -104,6 +104,8 @@ export class SocketGateway {
               );
 
               const roomMapping = (await this.cacheManager.get('room')) || {};
+              const x = await this.cacheManager.get('room');
+              if (!x) this.cacheManager.set('room', {});
               const obj = {};
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               obj[clientId] = secondClient;
@@ -112,7 +114,6 @@ export class SocketGateway {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-call
               this.server
                 .to(this.roomName)
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 .emit('GAME_STARTED', { room: this.roomName });
 
               this.startQuestions();
@@ -129,7 +130,7 @@ export class SocketGateway {
 
   startQuestions() {
     console.log('eNTERed');
-    let questions: object[] = [
+    const questions: object[] = [
       {
         question: 'What is the square root of 144?',
         options: ['10', '12', '14', '16'],
@@ -183,8 +184,6 @@ export class SocketGateway {
         correct: 0,
       },
     ];
-
-    questions = this.getRandomizedQuestions(questions);
 
     let index = 0;
 
