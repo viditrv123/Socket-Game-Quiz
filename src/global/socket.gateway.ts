@@ -92,6 +92,7 @@ export class SocketGateway {
           const secondClient = this.server.sockets.sockets.get(secondClientId);
           if (secondClient) {
             this.roomName = `game-room-${clientId}-${secondClientId}`;
+            console.log(this.roomName);
             await client.join(this.roomName);
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             secondClient.join(this.roomName);
