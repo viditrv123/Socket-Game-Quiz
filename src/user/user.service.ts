@@ -36,7 +36,14 @@ export class UserService {
 
     const token = await this.createAuthToken({ id: user.id });
 
-    return { id: user.id, token };
+    return {
+      statusCode: 200, // 200 OK
+      message: 'Login successful',
+      token,
+      user: {
+        userName,
+      },
+    };
   }
 
   async login({
