@@ -21,6 +21,7 @@ export class SocketGateway {
     private readonly socketAuthMiddlewareService: SocketAuthMiddlewareService,
     @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
     private timeOut,
+    private roomName,
   ) {}
 
   @WebSocketServer()
@@ -63,7 +64,8 @@ export class SocketGateway {
   @SubscribeMessage('QUIT_GAME')
   quitGame(client: Socket) {
     clearInterval(this.timeOut);
-    return;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    this.server.to(this.roomName).emit('EXIT_GAME', {});
   }
 
   @SubscribeMessage('FIND_GAME')
@@ -88,13 +90,13 @@ export class SocketGateway {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           const secondClient = this.server.sockets.sockets.get(secondClientId);
           if (secondClient) {
-            const roomName = `game-room-${clientId}-${secondClientId}`;
-            await client.join(roomName);
+            this.roomName = `game-room-${clientId}-${secondClientId}`;
+            await client.join(this.roomName);
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            secondClient.join(roomName);
+            secondClient.join(this.roomName);
 
             console.log(
-              `Client ${clientId} and ${secondClientId} joined room ${roomName}`,
+              `Client ${clientId} and ${secondClientId} joined room ${this.roomName}`,
             );
 
             const roomMapping = (await this.cacheManager.get('room')) || {};
@@ -103,23 +105,22 @@ export class SocketGateway {
             obj[clientId] = secondClient;
             obj[secondClientId] = clientId;
             await this.cacheManager.set('room', { ...roomMapping, ...obj });
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            this.server.to(roomName).emit('GAME_STARTED', { room: roomName });
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.server
+              .to(this.roomName)
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              .emit('GAME_STARTED', { room: this.roomName });
 
-            this.startQuestions(roomName);
+            this.startQuestions();
           }
         }
       }
     }
 
-    // Log the updated queue
-    console.log(queue);
-
-    // Return the user info (as before)
     return user;
   }
 
-  startQuestions(roomName: string) {
+  startQuestions() {
     console.log('eNTERed');
     let questions: object[] = [
       {
@@ -189,7 +190,7 @@ export class SocketGateway {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.server
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          .to(roomName)
+          .to(this.roomName)
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           .emit('QUESTIONS', { question: questions[index] });
         index += 1;
