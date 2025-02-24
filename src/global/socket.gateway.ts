@@ -63,6 +63,7 @@ export class SocketGateway {
 
   @SubscribeMessage('QUIT_GAME')
   quitGame(client: Socket) {
+    console.log('timeout clearing');
     clearInterval(this.timeOut);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     this.server.to(this.roomName).emit('EXIT_GAME', {});
