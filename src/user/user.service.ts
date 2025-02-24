@@ -29,7 +29,14 @@ export class UserService {
 
     const hashedPassword: string = await this.createHash(password);
 
-    return new this.userModel({ userName, password: hashedPassword }).save();
+    const user = await new this.userModel({
+      userName,
+      password: hashedPassword,
+    }).save();
+
+    const token = await this.createAuthToken({ id: user.id });
+
+    return { id: user.id, token };
   }
 
   async login({

@@ -26,34 +26,42 @@ export class SocketGateway {
   private server: any;
 
   afterInit() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     this.socketAuthMiddlewareService.use =
       this.socketAuthMiddlewareService.use.bind(
         this.socketAuthMiddlewareService,
       );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     this.server.use((socket: Socket, next) =>
       this.socketAuthMiddlewareService.use(socket, next),
     );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     this.server.on('connection', (client: Socket) => {
       console.log(`Client connected: ${client.id}`);
-      client.on('disconnect', async() => {
-        let queue = await this.cacheManager.get('queue')
-        if(queue.)
+      client.on('disconnect', async () => {
+        const queue: string[] = (await this.cacheManager.get('queue')) || [];
+        if (queue.includes(client.id)) {
+          await this.cacheManager.set(
+            'queue',
+            queue.filter((q) => q !== client.id),
+          );
+        }
         console.log(`Client disconnected: ${client.id}`);
       });
     });
   }
 
   @SubscribeMessage('GET_CURRENT_USER')
-  async getCurrentUser(client: Socket) {
+  getCurrentUser(client: Socket) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const user = (client.data.user as SocketUser) || {};
     return user;
   }
 
   @SubscribeMessage('FIND_GAME')
   async findGame(client: Socket) {
-    const questions = [1, 2, 3, 4];
-    const user = await this.getCurrentUser(client);
+    const user = this.getCurrentUser(client);
     // Fetch the current queue from Redis
     const queue: string[] = (await this.cacheManager.get('queue')) || [];
     console.log('queue', queue);
@@ -69,18 +77,20 @@ export class SocketGateway {
       const secondClientId = queue.shift();
       if (secondClientId) {
         await this.cacheManager.set('queue', queue);
-        if(clientId !==secondClientId)
-        {
+        if (clientId !== secondClientId) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           const secondClient = this.server.sockets.sockets.get(secondClientId);
           if (secondClient) {
             const roomName = `game-room-${clientId}-${secondClientId}`;
-            client.join(roomName);
+            await client.join(roomName);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             secondClient.join(roomName);
 
             console.log(
               `Client ${clientId} and ${secondClientId} joined room ${roomName}`,
             );
 
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             this.server.to(roomName).emit('GAME_STARTED', { room: roomName });
 
             this.startQuestions(roomName);
@@ -96,7 +106,7 @@ export class SocketGateway {
     return user;
   }
 
-  async startQuestions(roomName: string) {
+  startQuestions(roomName: string) {
     console.log('eNTERed');
     let questions: object[] = [
       {
@@ -153,25 +163,28 @@ export class SocketGateway {
       },
     ];
 
-    questions = await this.getRandomizedQuestions(questions);
+    questions = this.getRandomizedQuestions(questions);
 
     let index = 0;
-    let timeOut;
-    timeOut = setInterval(() => {
+
+    const timeOut = setInterval(() => {
       console.log('TimeoutSTarted');
       if (index >= questions.length) {
         clearInterval(timeOut);
         console.log('All questions have been sent');
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.server
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           .to(roomName)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           .emit('QUESTIONS', { question: questions[index] });
         index += 1;
       }
     }, 10000);
   }
 
-  async getRandomizedQuestions(questions: object[]): Promise<object[]> {
+  getRandomizedQuestions(questions: object[]): object[] {
     const shuffledQuestions = [...questions];
 
     for (let i = shuffledQuestions.length - 1; i > 0; i--) {
