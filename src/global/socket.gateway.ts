@@ -20,6 +20,7 @@ export class SocketGateway {
   constructor(
     private readonly socketAuthMiddlewareService: SocketAuthMiddlewareService,
     @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
+    private timeOut,
   ) {}
 
   @WebSocketServer()
@@ -59,6 +60,12 @@ export class SocketGateway {
     return user;
   }
 
+  @SubscribeMessage('QUIT_GAME')
+  quitGame(client: Socket) {
+    clearInterval(this.timeOut);
+    return;
+  }
+
   @SubscribeMessage('FIND_GAME')
   async findGame(client: Socket) {
     const user = this.getCurrentUser(client);
@@ -90,6 +97,12 @@ export class SocketGateway {
               `Client ${clientId} and ${secondClientId} joined room ${roomName}`,
             );
 
+            const roomMapping = (await this.cacheManager.get('room')) || {};
+            const obj = {};
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            obj[clientId] = secondClient;
+            obj[secondClientId] = clientId;
+            await this.cacheManager.set('room', { ...roomMapping, ...obj });
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
             this.server.to(roomName).emit('GAME_STARTED', { room: roomName });
 
@@ -167,10 +180,10 @@ export class SocketGateway {
 
     let index = 0;
 
-    const timeOut = setInterval(() => {
+    this.timeOut = setInterval(() => {
       console.log('TimeoutSTarted');
       if (index >= questions.length) {
-        clearInterval(timeOut);
+        clearInterval(this.timeOut);
         console.log('All questions have been sent');
       } else {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call

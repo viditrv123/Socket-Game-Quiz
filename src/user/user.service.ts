@@ -19,7 +19,8 @@ export class UserService {
     return argon.hash(password);
   }
 
-  async createAuthToken({ id }: { id: string }): Promise<string> {
+  createAuthToken({ id }: { id: string }): string {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return jwt.sign({ id }, process.env.JWT_SECRET);
   }
   async createUser({ userName, password }) {
