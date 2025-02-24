@@ -71,55 +71,60 @@ export class SocketGateway {
 
   @SubscribeMessage('FIND_GAME')
   async findGame(client: Socket) {
-    const user = this.getCurrentUser(client);
-    // Fetch the current queue from Redis
-    const queue: string[] = (await this.cacheManager.get('queue')) || [];
-    console.log('queue', queue);
-    // If the queue doesn't exist, initialize it as an empty array
-    const clientId: string = client.id;
-    if (queue.length === 0) {
-      await this.cacheManager.set('queue', []);
+    try {
+      const user = this.getCurrentUser(client);
+      // Fetch the current queue from Redis
+      const queue: string[] = (await this.cacheManager.get('queue')) || [];
+      console.log('queue', queue);
+      // If the queue doesn't exist, initialize it as an empty array
+      const clientId: string = client.id;
+      if (queue.length === 0) {
+        await this.cacheManager.set('queue', []);
 
-      queue.push(clientId);
+        queue.push(clientId);
 
-      await this.cacheManager.set('queue', queue);
-    } else {
-      const secondClientId = queue.shift();
-      if (secondClientId) {
         await this.cacheManager.set('queue', queue);
-        if (clientId !== secondClientId) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          const secondClient = this.server.sockets.sockets.get(secondClientId);
-          if (secondClient) {
-            this.roomName = `game-room-${clientId}-${secondClientId}`;
-            console.log(this.roomName);
-            await client.join(this.roomName);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            secondClient.join(this.roomName);
-
-            console.log(
-              `Client ${clientId} and ${secondClientId} joined room ${this.roomName}`,
-            );
-
-            const roomMapping = (await this.cacheManager.get('room')) || {};
-            const obj = {};
+      } else {
+        const secondClientId = queue.shift();
+        if (secondClientId) {
+          await this.cacheManager.set('queue', queue);
+          if (clientId !== secondClientId) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            obj[clientId] = secondClient;
-            obj[secondClientId] = clientId;
-            await this.cacheManager.set('room', { ...roomMapping, ...obj });
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            this.server
-              .to(this.roomName)
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              .emit('GAME_STARTED', { room: this.roomName });
+            const secondClient =
+              this.server.sockets.sockets.get(secondClientId);
+            if (secondClient) {
+              this.roomName = `game-room-${clientId}-${secondClientId}`;
+              console.log(this.roomName);
+              await client.join(this.roomName);
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+              secondClient.join(this.roomName);
 
-            this.startQuestions();
+              console.log(
+                `Client ${clientId} and ${secondClientId} joined room ${this.roomName}`,
+              );
+
+              const roomMapping = (await this.cacheManager.get('room')) || {};
+              const obj = {};
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              obj[clientId] = secondClient;
+              obj[secondClientId] = clientId;
+              await this.cacheManager.set('room', { ...roomMapping, ...obj });
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+              this.server
+                .to(this.roomName)
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                .emit('GAME_STARTED', { room: this.roomName });
+
+              this.startQuestions();
+            }
           }
         }
       }
-    }
 
-    return user;
+      return user;
+    } catch (err) {
+      console.log('Err while finding game', err);
+    }
   }
 
   startQuestions() {
