@@ -103,10 +103,10 @@ export class SocketGateway {
                 `Client ${clientId} and ${secondClientId} joined room ${this.roomName}`,
               );
 
-              const x = await this.cacheManager.get('room');
-              if (!x) this.cacheManager.set('room', {});
               const roomMapping: object =
                 (await this.cacheManager.get('room')) || {};
+              if (!(roomMapping && Object.keys(roomMapping).length))
+                this.cacheManager.set('room', {});
               const obj = {};
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               obj[clientId] = secondClient;
