@@ -105,6 +105,7 @@ export class SocketGateway {
 
               const roomMapping: object =
                 (await this.cacheManager.get('room')) || {};
+              console.log(roomMapping);
               if (!(roomMapping && Object.keys(roomMapping).length))
                 await this.cacheManager.set('room', {});
               const obj = {};
