@@ -110,8 +110,8 @@ export class SocketGateway {
                 await this.cacheManager.set('room', {});
               const obj = {};
               console.log(roomMapping, obj);
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              obj[clientId] = secondClient;
+
+              obj[clientId] = secondClientId;
               obj[secondClientId] = clientId;
               console.log(roomMapping, obj);
               await this.cacheManager.set('room', { ...roomMapping, ...obj });
