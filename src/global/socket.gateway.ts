@@ -111,6 +111,7 @@ export class SocketGateway {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               obj[clientId] = secondClient;
               obj[secondClientId] = clientId;
+              console.log(roomMapping, obj);
               await this.cacheManager.set('room', { ...roomMapping, ...obj });
               // eslint-disable-next-line @typescript-eslint/no-unsafe-call
               this.server
